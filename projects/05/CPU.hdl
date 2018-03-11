@@ -39,5 +39,82 @@ CHIP CPU {
         pc[15];          // address of next instruction
 
     PARTS:
-    // Put your code here:
+    // 0 vvv vvvv vvvv vvvv <-- A-instruction
+    // 111 a c1 c2 c3 c4 c5 c6 d1 d2 d3 j1 j2 j3 <-- C-instruction
+    
+    // Load literal or outM in A?
+    Mux16(a=instruction, b=outLoop, sel=instruction[15], out=outMuxA);
+    
+    // Load A?
+    Not(in=instruction[15], out=notOpcode);
+    Or(a=notOpcode, b=instruction[5], out=cA);
+    
+    // A register
+    ARegister(in=outMuxA, load=cA, out=rA, out[0..14]=addressM);
+    
+    // Use A register or memory value?
+    Mux16(a=rA, b=inM, sel=instruction[12], out=outMuxAM);
+    
+    // Load D?
+    And(a=instruction[15], b=instruction[4], out=cD);
+    
+    // D register
+    DRegister(in=outLoop, load=cD, out=rD);
+    
+    ALU(x=rD, y=outMuxAM, out=outM, out=outLoop, zr=outZr, ng=outNg,
+        zx=instruction[11],
+        nx=instruction[10],
+        zy=instruction[9],
+        ny=instruction[8],
+        f=instruction[7],
+        no=instruction[6]);
+    
+    // JGT
+    Or(a=outNg, b=outZr, out=tmp1);
+    Not(in=tmp1, out=nor1);
+    And(a=instruction[0], b=nor1, out=c1);
+    Mux(a=false, b=true, sel=c1, out=JGT);
+    
+    // JEQ
+    And(a=instruction[1], b=outZr, out=JEQ);
+    
+    // JGE
+    Or(a=JGT, b=JEQ, out=JGE);
+    
+    // JLT
+    And(a=instruction[2], b=outNg, out=JLT);
+    
+    // JNE
+    Not(in=outZr, out=notZr);
+    And(a=instruction[2], b=instruction[0], out=and1);
+    And(a=and1, b=notZr, out=JNE);
+    
+    // JLE
+    Or(a=JLT, b=JEQ, out=JLE);
+    
+    // JMP
+    And(a=instruction[0], b=instruction[1], out=and2);
+    And(a=and2, b=instruction[2], out=JMP);
+    
+    // Any jump condition true?
+    Or8Way(out=outJMP,
+        in[0]=false,
+        in[1]=JGT,
+        in[2]=JEQ,
+        in[3]=JGE,
+        in[4]=JLT,
+        in[5]=JNE,
+        in[6]=JLE,
+        in[7]=JMP);
+    And(a=outJMP, b=instruction[15], out=isJump);
+    
+    // Should just increment PC?
+    Or(a=reset, b=isJump, out=tmp2);
+    Not(in=tmp2, out=isInc);
+    
+    // PC
+    PC(in=rA, load=isJump, inc=isInc, reset=reset, out[0..14]=pc);
+    
+    // Write memory?
+    And(a=instruction[3], b=instruction[15], out=writeM);
 }
