@@ -52,6 +52,15 @@ class Main {
                                 case POP:
                                     generator.writePushPop("pop", parser.getArg1(), parser.getArg2());
                                     break;
+                                case LABEL:
+                                    generator.writeLabel(parser.getArg1());
+                                    break;
+                                case GOTO:
+                                    generator.writeGoto(parser.getArg1());
+                                    break; 
+                                case IF:
+                                    generator.writeIf(parser.getArg1());
+                                    break;                                    
                                 case WHITESPACE:
                                     // ignore
                                     break;

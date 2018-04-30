@@ -45,7 +45,7 @@
         @SCREEN
         D=D+A
         
-        // store for later
+        // store it for later
         @R1
         M=D
         

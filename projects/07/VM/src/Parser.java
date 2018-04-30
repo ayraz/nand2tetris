@@ -32,15 +32,14 @@ class Parser implements AutoCloseable {
     + '|' + Constants.Operation.OR;
             
     // whitespace | comments
-    private static final Pattern WHITESPACE_PATTERN = 
-        Pattern.compile("^(\\/\\/.*|\\s*)$");
+    private static final Pattern WHITESPACE_PATTERN =  Pattern.compile("^(\\/\\/.*|\\s*)$");
     // named after their corresponding commands
-    private static final Pattern ARITHMETIC_PATTERN = 
-        Pattern.compile("^\\s*(" + COMMAND + ")");
-    private static final Pattern PUSH_PATTERN = 
-        Pattern.compile("^\\s*push (" + SEGMENT + ") (\\d+)");
-    private static final Pattern POP_PATTERN = 
-        Pattern.compile("^\\s*pop (" + SEGMENT + ") (\\d+)");
+    private static final Pattern ARITHMETIC_PATTERN = Pattern.compile("^\\s*(" + COMMAND + ")");
+    private static final Pattern PUSH_PATTERN = Pattern.compile("^\\s*push (" + SEGMENT + ") (\\d+)");
+    private static final Pattern POP_PATTERN = Pattern.compile("^\\s*pop (" + SEGMENT + ") (\\d+)");
+    private static final Pattern LABEL_PATTERN = Pattern.compile("^\\s*label (.+?)\\b");
+    private static final Pattern GOTO_PATTERN = Pattern.compile("^\\s*goto (.+?)\\b");
+    private static final Pattern IF_GOTO_PATTERN = Pattern.compile("^\\s*if-goto (.+?)\\b");
 
     private final File file;
 
@@ -66,6 +65,9 @@ class Parser implements AutoCloseable {
             final Matcher pum = PUSH_PATTERN.matcher(line);
             final Matcher pom = POP_PATTERN.matcher(line);
             final Matcher wm = WHITESPACE_PATTERN.matcher(line);
+            final Matcher lm = LABEL_PATTERN.matcher(line);
+            final Matcher gm = GOTO_PATTERN.matcher(line);
+            final Matcher igm = IF_GOTO_PATTERN.matcher(line);
 
             // whitespace
             if (wm.find()) {
@@ -84,6 +86,18 @@ class Parser implements AutoCloseable {
                 command = Command.POP;
                 arg1 = pom.group(1);
                 arg2 = pom.group(2);
+            }
+            else if (lm.find()) {
+                command = Command.LABEL;
+                arg1 = lm.group(1);
+            }
+            else if (gm.find()) {
+                command = Command.GOTO;
+                arg1 = gm.group(1);
+            }
+            else if (igm.find()) {
+                command = Command.IF;
+                arg1 = igm.group(1);
             }
             // invalid line
             else {

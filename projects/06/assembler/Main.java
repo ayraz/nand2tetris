@@ -2,15 +2,19 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.nio.file.Files;
 import java.util.Deque;
 
 class Main {
 
-    private static final int WORD_WIDTH = 16;
-    private static final int UNALLOC_ADDRESS_START = 16;
-
     public static void main(String[] args) throws IOException {
-        for (String path : args) {
+        for (String source : args) {
+            Path path = new Path(source);
+            if (Files.isDirectory(path, null)) {
+
+            } else {
+                
+            }
             final String fileName = path.substring(path.lastIndexOf(File.separator) + 1, path.indexOf(".asm"));
             final File file = new File(path);
             Parser parser = new Parser(file);

@@ -114,7 +114,7 @@ class Generator implements AutoCloseable {
                 writer.append("D=M-D");
                 writer.newLine();
 
-                handleIfElse("JEQ");
+                handleConditionalAssignment("JEQ");
                 break;                
             case Constants.Operation.GT:
                 writer.append("@SP");
@@ -128,7 +128,7 @@ class Generator implements AutoCloseable {
                 writer.append("D=M-D");
                 writer.newLine();
 
-                handleIfElse("JGT");
+                handleConditionalAssignment("JGT");
                 break;                                
             case Constants.Operation.LT:
                 writer.append("@SP");
@@ -142,7 +142,7 @@ class Generator implements AutoCloseable {
                 writer.append("D=M-D");
                 writer.newLine();
 
-                handleIfElse("JLT");
+                handleConditionalAssignment("JLT");
                 break;                
         }
 
@@ -153,18 +153,18 @@ class Generator implements AutoCloseable {
         }
     }
 
-    private void handleIfElse(String condition) throws IOException {
+    private void handleConditionalAssignment(String condition) throws IOException {
         writer.append("M=0").append(" // true");
         writer.newLine();
 
-        selectIf("IF");
+        selectBooleanLabel("IF");
         writer.append("D;").append(condition);
         writer.newLine();
-        selectIf("ELSE");
+        selectBooleanLabel("ELSE");
         writer.append("0;JMP");
         writer.newLine();
 
-        writeIf("IF");
+        writeBooleanLabel("IF");
         writer.append("@SP");
         writer.newLine();
         writer.append("A=M-1");
@@ -172,15 +172,15 @@ class Generator implements AutoCloseable {
         writer.append("M=-1").append(" // false");
         writer.newLine();
 
-        writeIf("ELSE");
+        writeBooleanLabel("ELSE");
     }
 
-    private void writeIf(String label) throws IOException {
+    private void writeBooleanLabel(String label) throws IOException {
         writer.append(String.format("(%s_%d)", label, labelCount));
         writer.newLine();
     }
 
-    private void selectIf(String label) throws IOException {
+    private void selectBooleanLabel(String label) throws IOException {
         writer.append(String.format("@%s_%d", label, labelCount));
         writer.newLine();
     }
@@ -384,6 +384,39 @@ class Generator implements AutoCloseable {
         writer.newLine();
         writer.append("M=M-1");
         writer.newLine();
+    }
+
+    public void writeInit() {
+
+    }
+
+    public void writeLabel(String label) throws IOException {
+        writer.append("// ").append("label declaration");     
+        writer.newLine();              
+        writer.append("(" + label + ")");
+        writer.newLine();        
+    }
+
+    public void writeGoto(String label) throws IOException {
+        writer.append("// ").append("goto " + label);     
+        writer.newLine();              
+        writer.append("@"+ label);
+        writer.newLine();
+        writer.append("0;JMP");
+        writer.newLine();   
+    }
+
+    public void writeIf(String label) throws IOException {
+        writer.append("// ").append("if-goto " + label);    
+        writer.newLine();
+        decStackPtr();
+        derefStackPtr();    
+        writer.append("D=M");
+        writer.newLine();      
+        writer.append("@"+ label);
+        writer.newLine();
+        writer.append("D;JGT");
+        writer.newLine();   
     }
 
     @Override
